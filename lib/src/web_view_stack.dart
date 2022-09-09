@@ -38,6 +38,17 @@ class _WebViewStackState extends State<WebViewStack> {
               loadingPercentage = 100;
             });
           },
+          navigationDelegate: (navigation) {
+            final host = Uri.parse(navigation.url).host;
+            if (host.contains('youtube.com')) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Blocking navigation to $host')));
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
+          javascriptMode: JavascriptMode.unrestricted,
+          javascriptChannels: _createJavascriptChannels(context),
         ),
         if (loadingPercentage < 100)
           LinearProgressIndicator(
@@ -47,5 +58,17 @@ class _WebViewStackState extends State<WebViewStack> {
           )
       ],
     );
+  }
+
+  Set<JavascriptChannel> _createJavascriptChannels(BuildContext context) {
+    return {
+      JavascriptChannel(
+        name: 'SnackBar',
+        onMessageReceived: (message) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(message.message)));
+        },
+      )
+    };
   }
 }
